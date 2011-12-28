@@ -1,0 +1,69 @@
+###
+# Macros
+###
+ext_if="em0"
+int_if="re0"
+internal_net="192.168.0.0/24"
+icmp_types = "echoreq"
+xbox="192.168.0.123"
+xbox_out_udp_port="{88,3074}"
+xbox_out_tcp_port="{80, 443, 3074}"
+xbox_in_tcp_port="{3074}"
+###
+# Tables
+###
+table <fakeaddr> const { 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 169.254.0.0/16 }
+table <whitelist> persist file "/etc/pf.whitelist"
+
+###
+# Options
+###
+set block-policy drop
+set loginterface $ext_if
+###
+# Normalization
+###
+scrub in all
+scrub out all random-id max-mss 1414
+
+###
+# Queueing
+###
+
+###
+# Translation
+###
+rdr-anchor "miniupnpd"
+nat on $ext_if from $xbox to any -> ($ext_if) static-port
+nat on $ext_if from $internal_net to any -> ($ext_if)
+
+rdr on $ext_if inet proto udp from any to ($ext_if) port $xbox_out_udp_port -> $xbox
+rdr on $ext_if inet proto tcp from any to ($ext_if) port $xbox_out_tcp_port -> $xbox
+
+###
+# Filtering
+###
+block log all
+pass in on $int_if from $internal_net to any
+pass out on $int_if from any to $internal_net 
+
+pass quick on $ext_if from 192.168.3.100
+
+# out ping
+pass out quick on $ext_if inet proto icmp all icmp-type 8 code 0 keep state
+
+# out http, https, dns
+pass out quick on $ext_if proto {tcp, udp} from $ext_if to any port {http, https, ftp, domain, ntp, nicname } keep state
+pass in quick on $ext_if proto {tcp, udp} from $ext_if to any port { 68, 69 } keep state
+
+anchor "miniupnpd"
+pass out on $int_if from any to 239.0.0.0/8 keep state
+pass in on $int_if from any to 239.0.0.0/8 keep state
+
+#pass in on $ext_if proto udp from any to any port $xbox_out_udp_port
+#pass in on $ext_if proto tcp from any to any port $xbox_out_tcp_port flags S/SA
+
+pass in log quick on $ext_if from <whitelist> to any
+pass out log quick on $ext_if from any to <whitelist>
+
+pass in inet proto icmp all icmp-type $icmp_types
