@@ -1,11 +1,11 @@
 ###
 # Macros
 ###
-# WAN懁僀儞僞乕僼僃乕僗傪掕媊
+# WAN鍋淬偆銉炽偪銉笺儠銈с兗銈广倰瀹氱京
 ext_if="em0"
-# LAN懁僀儞僞乕僼僃乕僗傪掕媊
+# LAN鍋淬偆銉炽偪銉笺儠銈с兗銈广倰瀹氱京
 int_if="re0" #
-# xbox偑嶲壛偟偰偄傞僱僢僩儚乕僋傪彂偔
+# xbox銇屽弬鍔犮仐銇︺亜銈嬨儘銉冦儓銉兗銈倰鏇搞亸
 internal_net="192.168.0.0/24" 
 icmp_types = "echoreq"
 xbox="192.168.0.123"
